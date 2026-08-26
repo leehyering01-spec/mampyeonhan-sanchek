@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "validation_policy": {
+    "minimum_duration_minutes": 10,
+    "minimum_distance_meters": 400,
+    "arrival_radius_meters": 200
+  },
+  "residential_complexes": [
+    {
+      "id": "raemian_lagrande",
+      "name": "이문동 래미안 라그란데",
+      "entrances": [
+        {"id":"lagrande_gate_1","name":"래미안 라그란데 GATE1","location":{"latitude":37.6030473,"longitude":127.0610335}},
+        {"id":"lagrande_gate_2","name":"래미안 라그란데 GATE2","location":{"latitude":37.5997869,"longitude":127.0607616}},
+        {"id":"lagrande_gate_3","name":"래미안 라그란데 GATE3","location":{"latitude":37.6006028,"longitude":127.0591059}},
+        {"id":"lagrande_gate_4","name":"래미안 라그란데 GATE4","location":{"latitude":37.5995378,"longitude":127.0606032}},
+        {"id":"lagrande_gate_5","name":"래미안 라그란데 GATE5","location":{"latitude":37.5985172,"longitude":127.0588967}}
+      ]
+    },
+    {
+      "id": "imun_ipark_xi",
+      "name": "이문 아이파크자이",
+      "entrances": [
+        {"id":"ipark_1_main","name":"이문아이파크자이 1단지 정문","location":{"latitude":37.5982769,"longitude":127.0638422}},
+        {"id":"ipark_1_back","name":"이문아이파크자이 1단지 후문","location":{"latitude":37.5961183,"longitude":127.0622977}},
+        {"id":"ipark_2_main","name":"이문아이파크자이 2단지 정문","location":{"latitude":37.5985096,"longitude":127.0640525}},
+        {"id":"ipark_2_back","name":"이문아이파크자이 2단지 후문","location":{"latitude":37.6008418,"longitude":127.0645162}},
+        {"id":"ipark_3","name":"이문아이파크자이 3단지","location":{"latitude":37.6007171,"longitude":127.0557510}}
+      ]
+    }
+  ],
+  "destinations": [],
+  "routes": []
+}
