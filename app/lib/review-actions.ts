@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
+import { redirect, unstable_rethrow } from 'next/navigation';
 import {
   REVIEW_ALLOWED_TYPES,
   REVIEW_IMAGE_BUCKET,
@@ -17,6 +17,17 @@ export type ReviewFormState = {
 
 function readText(formData: FormData, key: string) {
   return String(formData.get(key) ?? '').trim();
+}
+
+function toActionError(error: unknown): string {
+  if (error && typeof error === 'object' && 'message' in error) {
+    const message = String((error as { message?: string }).message ?? '');
+    if (message.includes('row-level security')) {
+      return '데이터베이스 권한 설정이 필요합니다. supabase/schema.sql을 SQL Editor에서 다시 실행해 주세요.';
+    }
+    if (message) return message;
+  }
+  return error instanceof Error ? error.message : '후기를 저장하지 못했어요.';
 }
 
 function validateFields(formData: FormData): ReviewFormState | { values: Record<string, string> } {
@@ -102,10 +113,8 @@ export async function createReview(
     revalidatePath('/reviews');
     redirect(`/reviews/${data.id}`);
   } catch (error) {
-    if (typeof error === 'object' && error && 'digest' in error) throw error;
-    return {
-      error: error instanceof Error ? error.message : '후기를 저장하지 못했어요.',
-    };
+    unstable_rethrow(error);
+    return { error: toActionError(error) };
   }
 }
 
@@ -152,10 +161,8 @@ export async function updateReview(
     revalidatePath(`/reviews/${id}`);
     redirect(`/reviews/${id}`);
   } catch (error) {
-    if (typeof error === 'object' && error && 'digest' in error) throw error;
-    return {
-      error: error instanceof Error ? error.message : '후기를 수정하지 못했어요.',
-    };
+    unstable_rethrow(error);
+    return { error: toActionError(error) };
   }
 }
 

@@ -8,18 +8,24 @@
 
 ```mermaid
 flowchart TB
-  subgraph Client["Browser / PWA"]
-    Page["app/page.tsx\n(view state machine)"]
-    Comp["components/*"]
-    Lib["lib/profile.ts\nlib/walkMetrics.ts"]
+  subgraph Routes["App Router"]
+    Landing["/ app/page.tsx 랜딩"]
+    Walk["/walk app/walk/page.tsx PWA"]
+    Reviews["/reviews CRUD"]
+  end
+
+  subgraph WalkClient["Walk PWA"]
+    WalkPage["view state machine"]
     LS["localStorage"]
-    SW["public/sw.js"]
-    Map["NavMap + MapLibre vendor"]
-    Page --> Comp
-    Page --> Lib
-    Page --> LS
-    Page --> Map
-    Page --> SW
+    Map["NavMap + MapLibre"]
+    WalkPage --> LS
+    WalkPage --> Map
+  end
+
+  subgraph ReviewSrv["Reviews"]
+    Actions["Server Actions"]
+    SB[(Supabase walk_reviews\n+ review-photos)]
+    Actions --> SB
   end
 
   subgraph Static["Static data"]
@@ -27,29 +33,23 @@ flowchart TB
     Dest["destinations.json"]
   end
 
-  subgraph External["External services"]
-    OSRM["OSRM foot routing"]
-    Overpass["Overpass API"]
-    OSM["OSM raster tiles"]
-    Font["jsDelivr Pretendard"]
+  subgraph External["External"]
+    OSRM["OSRM foot"]
+    Overpass["Overpass"]
+    OSM["OSM tiles"]
   end
 
-  subgraph Build["Build / Host"]
-    Vinext["vinext + Vite"]
-    Dist["dist/ client + server"]
-    CF["Cloudflare Workers / Sites\nor cloudflared tunnel"]
-  end
-
-  Page --> Cat
-  Page --> Dest
+  Landing --> Reviews
+  Landing --> Walk
+  Walk --> Reviews
+  Walk --> Cat
+  Walk --> Dest
+  Reviews --> Dest
   Map --> OSRM
-  Lib --> OSRM
-  Lib --> Overpass
   Map --> OSM
-  Vinext --> Dist --> CF
 ```
 
-**백엔드 애플리케이션 서버는 없다.** vinext/Workers는 정적·SSR 셸 제공용이며, 비즈니스 데이터는 JSON + localStorage다.
+후기의 최종 저장소는 **Supabase**다. `/walk` 프로필·GPS 기록만 localStorage다. 호스팅은 **Vercel** (Next.js).
 
 ---
 
@@ -57,12 +57,15 @@ flowchart TB
 
 | 레이어 | 역할 |
 |--------|------|
-| `layout.tsx` | HTML shell, metadata, fonts, icons |
-| `page.tsx` | 유일한 화면 오케스트레이터 (`'use client'`) |
-| `components/` | 온보딩, 설정, 캐러셀, 지도 |
-| `lib/` | 순수 헬퍼 + fetch 유틸 |
-| `globals.css` | 토큰 + 레이아웃 |
-| `public/` | PWA, 이미지, vendored map SDK |
+| `app/layout.tsx` | HTML shell, metadata, Pretendard |
+| `app/page.tsx` | 소개 랜딩 |
+| `app/walk/page.tsx` | PWA 오케스트레이터 (`'use client'`) |
+| `app/reviews/**` | 후기 목록/상세/등록/수정 |
+| `app/components/landing` | 헤더·푸터·FAQ |
+| `app/components/reviews` | 폼·카드·삭제 확인 |
+| `app/components/ui` | shadcn 스타일 버튼/입력/다이얼로그 |
+| `app/lib/review-actions.ts` | Server Actions CRUD |
+| `public/` | PWA, 이미지, vendored MapLibre |
 
 `NavMap`은 `next/dynamic(..., { ssr: false })`로 로드.
 
@@ -73,11 +76,12 @@ flowchart TB
 | 종류 | 존재 여부 |
 |------|-----------|
 | 자체 REST/GraphQL | 없음 |
-| Server Actions / Route Handlers | 없음 (`app/`에 api 폴더 없음) |
-| DB (D1/R2) | `hosting.json`에서 `d1`/`r2` = null. vite에 placeholder binding만 |
-| Auth | 없음 |
+| Server Actions | `createReview` / `updateReview` / `deleteReview` |
+| DB | Supabase Postgres `walk_reviews` |
+| Storage | Supabase `review-photos` |
+| Auth / RLS | 미션 6에서는 사용자 인증 없음. 스키마는 RLS disable + 공개 정책 |
 
-배포 시 `dist/server` + wrangler는 **호스팅 런타임**이지 도메인 API가 아니다.
+목적지 JSON은 서버가 읽기만 한다.
 
 ---
 
@@ -144,9 +148,10 @@ stateDiagram-v2
 
 ## Routing
 
-- **Next**: `/` only (`app/page.tsx`)
-- **App UX**: `View` union string
-- Query: `?dev=1` → validation HUD
+- `/` 랜딩
+- `/walk` PWA (`View` union + `?dev=1` HUD)
+- `/reviews`, `/reviews/new`, `/reviews/[id]`, `/reviews/[id]/edit`
+- `/reviews?q=&destination=&sort=&page=` 검색·필터·정렬
 
 ---
 
@@ -154,11 +159,10 @@ stateDiagram-v2
 
 | 메커니즘 | 용도 |
 |----------|------|
-| localStorage | 프로필·저장·기록·단지·방문·검증로그 |
-| Cache API (SW) | 정적 자산 + network-first fetch 캐시 |
+| localStorage | `/walk` 프로필·저장·기록·단지·방문·검증로그 |
+| Supabase | 산책 후기 본문·별점·사진 경로 |
+| Cache API (SW) | `/walk` 정적 자산 |
 | 서버 세션/쿠키 | 사용 안 함 |
-
-기기 간 동기화 없음. 브라우저 데이터 삭제 시 소실.
 
 ---
 
@@ -171,7 +175,7 @@ stateDiagram-v2
 | `https://tile.openstreetmap.org/{z}/{x}/{y}.png` | 지도 타일 | 없음 |
 | `cdn.jsdelivr.net/.../pretendard.min.css` | 폰트 | 없음 |
 
-API 키·`.env` 런타임 의존 **없음** (저장소에 `.env*` 파일 없음).
+후기 CRUD는 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`가 필요하다. 값은 `.env.local` / Vercel에만 두고 GitHub에 올리지 않는다.
 
 ---
 
@@ -221,15 +225,10 @@ flowchart LR
 ## Build / Deploy pipeline
 
 ```sh
-vinext build   # → dist/client + dist/server
-vinext start   # local production (often :4173)
-# optional:
-npx wrangler deploy -c dist/server/wrangler.json
-# or OpenAI Sites via .openai/hosting.json project_id
-# or cloudflared tunnel --url http://127.0.0.1:4173
+pnpm dev
+pnpm build && pnpm start
+# 제출 배포: GitHub → Vercel (위 두 환경 변수 설정)
 ```
-
-`scripts/deploy.sh`: build 후 wrangler 로그인/`CLOUDFLARE_API_TOKEN` 있으면 deploy, 없으면 안내 후 exit 0.
 
 ---
 

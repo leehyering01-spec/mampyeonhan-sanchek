@@ -23,12 +23,12 @@
 
 # 2. 핵심 사용자 경험
 
-소개 랜딩은 **`/`**. 기존 산책 앱은 **`/walk`** (`app/walk/page.tsx`의 `view` state SPA). 산책 후기 CRUD는 **`/reviews`**.
+소개 랜딩은 **`/`**. 기존 산책 앱은 **`/walk`** (`app/walk/page.tsx`의 `view` state SPA). 산책 후기 CRUD는 **`/reviews`** (Supabase).
 
-코드 기준 실제 플로우:
+`/walk` 코드 기준 실제 플로우:
 
 ```
-앱 진입 (/)
+앱 진입 (/walk)
   → (profile.onboardingDone === false) 온보딩 3슬라이드
   → (profile.setupDone === false) 설정: 닉네임 / 아이 출생연월 / 생활권
   → 홈: 인사 + 추천 캐러셀
@@ -54,21 +54,18 @@
 
 # 3. 현재 화면 구조
 
-Next route는 **`/` 하나**. 아래는 `View` enum 기준 논리 화면.
+Next route는 `/`, `/walk`, `/reviews` 계열. 아래는 `/walk`의 `View` 기준 논리 화면.
 
 | View | 파일 | 역할 | 주요 UI | 연결 | 주요 state |
 |------|------|------|---------|------|------------|
-| `onboarding` | `app/components/OnboardingSlides.tsx` + `page.tsx` | 첫 방문 소개 3장 | 슬라이드·건너뛰기 | → `setup` | `profile.onboardingDone` |
-| `setup` | `app/components/SetupForm.tsx` | 프로필 입력 | 닉네임, 출생연월, 생활권 select | → `home` | `UserProfile` |
-| `home` | `page.tsx` + `RecommendCarousel.tsx` | 추천 홈 | 인사, 히어로, 캐러셀, 필터 칩 | → explore / detail / tabs | `complexId`, `category`, `visible` |
-| `explore` | `page.tsx` | 전체 목록 | 리스트 + 카테고리 | → detail / home | 동일 |
-| (detail sheet) | `page.tsx` 오버레이 | 장소 상세 | 사진·amenity 칩·경로 요약·선택/저장 | → `departure` | `selected` |
-| `departure` | `page.tsx` + `NavMap` preview | 출입구·경로 미리보기 | 출입구 리스트, ETA 요약, 시작 CTA | → `walk` / home | `entranceId`, route stats |
-| `walk` | `page.tsx` + `NavMap` navigate | 길안내 | 맵 HUD, 위험 태그, **산책 완료** 버튼 | → `complete` / departure | GPS, route*, `elapsed` |
-| `complete` | `page.tsx` | 완료·후기 | 별점·textarea | → history / home | `records`, `latestRecord` |
-| `saved` | `page.tsx` | 저장 목록 | 하트 저장 목적지 | detail | `saved[]` |
-| `history` | `page.tsx` | 산책 기록 | 기록 카드, 후기 수정, 내보내기 | — | `records` |
-| `mypage` | `page.tsx` | 마이 | 프로필·생활권·온보딩 다시·설치 | setup/onboarding | `profile`, `visits` |
+| `onboarding` | `OnboardingSlides` + `walk/page.tsx` | 첫 방문 소개 3장 | 슬라이드·건너뛰기 | → `setup` | `profile.onboardingDone` |
+| `setup` | `SetupForm` | 프로필 입력 | 닉네임, 출생연월, 생활권 | → `home` | `UserProfile` |
+| `home` | `walk/page.tsx` + `RecommendCarousel` | 추천 홈 | 인사, 캐러셀 | → explore / detail | `complexId`, `category` |
+| `explore` | `walk/page.tsx` | 전체 목록 | 리스트 + 카테고리 | → detail / home | 동일 |
+| (detail sheet) | `walk/page.tsx` 오버레이 | 장소 상세 | 사진·amenity·경로 요약 | → `departure` | `selected` |
+| `departure` | `walk/page.tsx` + `NavMap` preview | 출입구·경로 미리보기 | 출입구, ETA, 시작 CTA | → `walk` | `entranceId` |
+| `walk` | `walk/page.tsx` + `NavMap` navigate | 길안내 | 맵 HUD, **산책 완료** | → `complete` | GPS, route |
+| `complete` | `walk/page.tsx` | 완료 | 「후기 남기기」→ `/reviews/new` | history / home | `records` |
 
 `layout.tsx`: 메타/아이콘/Pretendard CDN. 화면 로직 없음.
 
@@ -79,40 +76,26 @@ Next route는 **`/` 하나**. 아래는 `View` enum 기준 논리 화면.
 ```
 web_beta/
 ├── app/
-│   ├── page.tsx              # 거의 모든 UX·상태 (단일 클라이언트 페이지)
-│   ├── layout.tsx            # metadata, PWA 아이콘, Pretendard
-│   ├── globals.css           # 디자인 토큰 + 전역 스타일 (Tailwind import 포함)
-│   ├── components/
-│   │   ├── NavMap.tsx        # MapLibre 지도·경로 레이어
-│   │   ├── OnboardingSlides.tsx
-│   │   ├── SetupForm.tsx
-│   │   └── RecommendCarousel.tsx
-│   ├── lib/
-│   │   ├── profile.ts        # UserProfile + amenity/tip 헬퍼
-│   │   └── walkMetrics.ts    # 거리/ETA/OSRM/Overpass/블록리스트
-│   └── data/
-│       ├── catalog.json      # 단지·출입구·validation_policy (destinations/routes 빈 배열)
-│       └── destinations.json # 목적지 52건
-├── public/
-│   ├── manifest.webmanifest, sw.js
-│   ├── icons/, images/, favicon*
-│   └── vendor/maplibre/      # 사용 중
-│       vendor/leaflet/       # 벤더만 있음, 앱 코드 미참조 (dead)
-├── scripts/deploy.sh
-├── package.json, vite.config.ts, next.config.ts
-├── .openai/hosting.json      # Sites project_id (비밀 아님)
+│   ├── page.tsx                 # 소개 랜딩
+│   ├── walk/page.tsx            # PWA UX·상태
+│   ├── reviews/                 # 목록·new·[id]·edit
+│   ├── components/landing|reviews|ui
+│   ├── lib/review-actions.ts    # Server Actions
+│   ├── lib/supabase/            # env + server client
+│   └── data/*.json
+├── supabase/schema.sql
+├── .env.example                 # 이름만
 └── README.md, BETA_SMOKE.md
 ```
 
 | 구분 | 실제 상태 |
 |------|-----------|
-| Entry | `app/layout.tsx` + `app/page.tsx` (`'use client'`) |
-| Pages/routes | `/` only |
-| Hooks | 별도 `hooks/` 없음. `page.tsx` 내 `useEffect`/`useCallback` |
+| Entry | `app/layout.tsx` + `app/page.tsx` 랜딩 |
+| Pages/routes | `/`, `/walk`, `/reviews/**` |
 | Utils | `app/lib/*` |
-| API | 자체 REST 없음. 브라우저→OSRM, Overpass, OSM tiles |
-| DB/auth | 없음. `localStorage` only |
-| Styles | `globals.css` 중심. Tailwind 4는 import만, 대부분 커스텀 클래스 |
+| API | 후기 Server Actions. `/walk`는 브라우저→OSRM/Overpass |
+| DB | Supabase `walk_reviews`. `/walk` 프로필은 localStorage |
+| Styles | 랜딩/후기는 Tailwind `@theme`. `/walk`는 기존 CSS 클래스 |
 
 ---
 
@@ -122,23 +105,15 @@ web_beta/
 
 | 영역 | 기술 | 버전 |
 |------|------|------|
-| Framework | Next (vinext 빌드) | next `16.2.6`, vinext `1.0.0-beta.3` |
+| Framework | Next.js App Router | next `16.2.6` |
 | UI | React | `19.2.6` |
-| Language | TypeScript | `5.9.3` |
-| Bundler | Vite + vinext | vite `8.0.13` |
-| Styling | CSS + Tailwind 4 (postcss) | tailwindcss `4.2.1` — **실질 스타일은 CSS 변수/클래스** |
-| Routing | App Router 단일 페이지 + client `view` | — |
-| State | React `useState`/`useRef` | 전역 스토어 없음 |
-| Map | MapLibre GL (vendored JS) + OSM raster tiles | npm 패키지 아님 |
-| Routing API | OSRM public `router.project-osrm.org` foot | — |
-| Hazards | Overpass API | — |
-| Database | 없음 (vite에 D1/R2 바인딩 placeholder, hosting.json에서 null) | — |
-| Auth | 없음 | — |
-| PWA | manifest + `sw.js` (`mampyeonhan-v4`) | — |
-| Deploy | wrangler / OpenAI Sites / cloudflared quick tunnel(개발용) | wrangler `4.92.0` |
+| Styling | Tailwind 4 `@theme` + `/walk` 커스텀 CSS | tailwindcss `4.2.1` |
+| Routing | `/`, `/walk`, `/reviews/**` | — |
+| Map | MapLibre vendor + OSM | `/walk` only |
+| Database | Supabase Postgres + Storage | `walk_reviews`, `review-photos` |
+| Auth | 없음 (미션 7) | — |
+| Deploy | Vercel | GitHub 연동 |
 | Node | `>=22.13.0` | — |
-
-런타임 의존성 npm: `next`, `react`, `react-dom`만.
 
 ---
 
