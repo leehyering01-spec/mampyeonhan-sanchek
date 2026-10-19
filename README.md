@@ -89,7 +89,7 @@ pnpm build && pnpm start
 
 ## 배포 URL
 
-GitHub 저장소: (공개 리포 생성 후 여기에 적습니다)
+GitHub 저장소: https://github.com/leehyering01-spec/mampyeonhan-sanchek
 
 Vercel: (배포 후 여기에 적습니다)
 
