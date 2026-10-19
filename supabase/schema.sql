@@ -19,6 +19,23 @@ create index if not exists walk_reviews_rating_idx
 
 alter table public.walk_reviews disable row level security;
 
+drop policy if exists "walk_reviews public select" on public.walk_reviews;
+drop policy if exists "walk_reviews public insert" on public.walk_reviews;
+drop policy if exists "walk_reviews public update" on public.walk_reviews;
+drop policy if exists "walk_reviews public delete" on public.walk_reviews;
+
+-- Mission 6: no auth. Keep writes possible even if the dashboard re-enables RLS.
+create policy "walk_reviews public select"
+on public.walk_reviews for select using (true);
+create policy "walk_reviews public insert"
+on public.walk_reviews for insert with check (true);
+create policy "walk_reviews public update"
+on public.walk_reviews for update using (true) with check (true);
+create policy "walk_reviews public delete"
+on public.walk_reviews for delete using (true);
+
+grant select, insert, update, delete on table public.walk_reviews to anon, authenticated;
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql

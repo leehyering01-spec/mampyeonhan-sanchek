@@ -8,8 +8,8 @@
 ### 결정: 모바일 웹 PWA로 MVP 제공 (네이티브 앱 스토어 빌드 제외)
 
 - **이유:** README — 「앱스토어 앱·푸시·실시간 지도 SDK는 이번 범위가 아닙니다」
-- **현재 구현:** vinext 웹앱 + `manifest.webmanifest` + `sw.js` + 설치 CTA
-- **관련 파일:** `README.md`, `app/layout.tsx`, `public/manifest.webmanifest`, `public/sw.js`, `app/page.tsx`
+- **현재 구현:** Next.js 웹앱 + `manifest.webmanifest` + `sw.js` + 설치 CTA
+- **관련 파일:** `README.md`, `app/layout.tsx`, `public/manifest.webmanifest`, `public/sw.js`, `app/walk/page.tsx`
 
 ---
 
@@ -105,11 +105,11 @@
 
 ---
 
-### 결정: 후기는 별도 Review 엔티티 없이 WalkRecord의 rating/note
+### 결정: 공개 후기는 Supabase `walk_reviews`, 기기 내 메모는 WalkRecord
 
-- **이유:** 이유 확인 필요
-- **현재 구현:** 완료 화면·기록 목록에서 `updateReview`
-- **관련 파일:** `app/page.tsx`
+- **이유:** 미션 6은 mock/localStorage를 핵심 데이터의 최종 저장소로 쓰지 말 것. `/walk` 완료 메모는 기존 UX 유지.
+- **현재 구현:** `/reviews` CRUD → `walk_reviews`. `/walk` 완료 화면 CTA는 `/reviews/new`. 기기 기록의 rating/note는 localStorage에 남을 수 있음.
+- **관련 파일:** `app/lib/review-actions.ts`, `app/walk/page.tsx`
 
 ---
 
