@@ -91,7 +91,7 @@ pnpm build && pnpm start
 
 GitHub 저장소: https://github.com/leehyering01-spec/mampyeonhan-sanchek
 
-Vercel: (배포 후 여기에 적습니다)
+Vercel: https://mampyeonhan-sanchek.vercel.app
 
 ## QA 체크리스트
 
@@ -108,4 +108,4 @@ Vercel: (배포 후 여기에 적습니다)
 - [x] 랜딩 CTA「동네 후기 보기」「산책 시작하기」연결
 - [x] `/walk` 완료 화면 「후기 남기기」가 `/reviews/new?destination=...` 로 연결 (코드)
 
-배포 URL에서 같은 목록을 다시 점검합니다.
+배포 URL https://mampyeonhan-sanchek.vercel.app 에서 목록이 DB 후기를 보여 주는지 확인했습니다. 등록·수정·삭제는 배포 주소에서도 같은 흐름입니다.

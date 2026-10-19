@@ -7,7 +7,7 @@
 - GitHub 공개 저장소: https://github.com/leehyering01-spec/mampyeonhan-sanchek (`main`).
 - 로컬 `.env.local`에 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`가 있음 (gitignored). 값은 문서에 적지 않음.
 - `walk_reviews` + Storage `review-photos` 연결됨. 로컬에서 등록·수정·삭제·사진 업로드 확인.
-- Vercel 배포 URL은 아직 없음. CLI 로그인 후 배포하면 README에 기입.
+- Vercel 프로덕션: https://mampyeonhan-sanchek.vercel.app
 - 제출: `feature/mission-6` 브랜치에서 PR 제목 `[이혜리]-미션6`.
 
 ## 화면
@@ -38,8 +38,8 @@
 
 ## 작업 중 / 막힌 것
 
-1. **Vercel** — 로그인 후 env 두 개 설정, 프로덕션 배포, README에 URL 기입, 배포 URL에서 QA 재실행.
-2. **PR 제출** — `feature/mission-6`를 푸시하고 `[이혜리]-미션6` PR을 올린 뒤 멘토에게 디스코드 DM.
+1. **멘토 제출** — PR https://github.com/leehyering01-spec/mampyeonhan-sanchek/pull/1 을 올린 뒤 디스코드 DM으로 리뷰 요청.
+2. GitHub 앱을 Vercel에 연결하면 이후 푸시가 자동 배포된다 (지금은 CLI 배포).
 
 ## 건드리면 위험한 부분
 

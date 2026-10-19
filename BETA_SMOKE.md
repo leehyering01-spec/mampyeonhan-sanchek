@@ -19,7 +19,7 @@ GitHub: https://github.com/leehyering01-spec/mampyeonhan-sanchek
 3. Production 배포 URL이 나오면 README 「배포 URL」에 적는다.
 4. 배포 URL에서 후기 등록·조회·수정·삭제·사진 업로드를 다시 확인한다.
 
-배포 URL: ______________________
+배포 URL: https://mampyeonhan-sanchek.vercel.app
 
 ## 후기 CRUD 스모크
 
