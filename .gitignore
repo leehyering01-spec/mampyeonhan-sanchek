@@ -33,6 +33,7 @@ yarn-error.log*
 # local binaries and archives
 .tools/
 *.zip
+supabase/.temp/
 
 # deployment and generated files
 .vercel
